@@ -14,6 +14,7 @@ export default function GameHeader(props) {
           <span className="stat-value">{props.moves}</span>
         </div>
       </div>
+      <button className="reset-btn" onClick={props.onReset}>New Game</button>
     </div>
   );
 }

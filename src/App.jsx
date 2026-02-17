@@ -1,6 +1,7 @@
 import GameHeader from "./components/GameHeader";
 import Card from "./components/Card";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import WinMessage from "./components/WinMessage";
 
 const cardValues = [
   "🍎",
@@ -27,14 +28,35 @@ function App() {
   const [matchedCards, setMatchedCards] = useState([]);
   const [score, setScore] = useState(0);
   const [moves, setMoves] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
+
+  const shuffledArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+
+      const temp = shuffled[i];
+      shuffled[i] = shuffled[j];
+      shuffled[j] = temp;
+    }
+
+    return shuffled;
+  };
+  //initializeGame
   const initGame = () => {
-    const findalCards = cardValues.map((value, index) => ({
+    const shuffled = shuffledArray(cardValues);
+    const findalCards = shuffled.map((value, index) => ({
       id: index,
       value,
       isFlipped: false,
       isMatched: false,
     }));
     setCards(findalCards);
+    setIsLocked(false);
+    setMoves(0);
+    setScore(0);
+    setMatchedCards([]);
+    setFlippedCards([]);
   };
 
   useEffect(() => {
@@ -42,7 +64,12 @@ function App() {
   }, []);
 
   const handleCardClick = (card) => {
-    if (card.isFlipped || card.isMatched) {
+    if (
+      card.isFlipped ||
+      card.isMatched ||
+      isLocked ||
+      flippedCards.length === 2
+    ) {
       return;
     }
     const newCards = cards.map((c) => {
@@ -59,6 +86,7 @@ function App() {
     setFlippedCards(newFlippedCards);
 
     if (flippedCards.length === 1) {
+      setIsLocked(true);
       const firstCard = cards[flippedCards[0]];
 
       if (firstCard.value === card.value) {
@@ -75,6 +103,7 @@ function App() {
             }),
           );
           setFlippedCards([]);
+          setIsLocked(false);
         }, 500);
       } else {
         setTimeout(() => {
@@ -87,7 +116,7 @@ function App() {
           });
 
           setCards(flippedBackCard);
-
+          setIsLocked(false);
           setFlippedCards([]);
         }, 1000);
       }
@@ -95,10 +124,12 @@ function App() {
     }
   };
 
+  const isGameComplete = matchedCards.length === cardValues.length
+
   return (
     <div className="app">
-      <GameHeader score={score} moves={moves} />
-
+      <GameHeader score={score} moves={moves} onReset={initGame} />
+       { isGameComplete && <WinMessage moves= {moves}/>}
       <div className="cards-grid">
         {cards.map((card) => (
           <Card card={card} onClick={handleCardClick} />
